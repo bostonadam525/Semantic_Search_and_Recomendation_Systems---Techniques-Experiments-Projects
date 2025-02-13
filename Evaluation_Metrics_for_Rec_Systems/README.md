@@ -321,3 +321,41 @@ Hit rank           predicted (or actual) rating
 
 ![image](https://github.com/user-attachments/assets/478b57de-afc2-4bc7-ba1f-6a26f0a02fe0)
 * [image source](https://medium.com/@kyasar.mail/recommender-systems-what-long-tail-tells-91680f10a5b2)
+
+
+
+# How often do recommendations change in your system?
+* This is very important to monitor but is also unique as compared to most machine learning problems.
+* There are specific metrics that you should look at.
+
+
+## 1. Churn
+* This measures how sensitive system is to new user behavior. 
+* Showing recommendations to someone too many times may cause your churn score to be too high. 
+* High churn is NOT a good thing. You can maximize your churn score by recommending things completely at random but these often ARE NOT GOOD RECOMMENDATIONS. 
+
+## 2. Responsiveness
+* How quickly does new user behavior effect your recommendations? 
+* Need balance between responsiveness and simplicity.
+
+## 3. Perceived Quality
+* This is a common metric used with a "thumbs up" or "thumbs down" or even a star based rating.
+* You are asking your users to rate the recommendation results. —> is this actually useful? maybe, maybe not. How do we know if they are being truthful? 
+
+
+## 3. What is important? 
+* It depends on:
+  * 1. People, cultures
+  * 2. Business requirements
+  * 3. Return on Investment
+   
+# The Surrogate Problem
+* There is a real challenge where often accuracy metrics tell your algorithm is great only to have it do HORRIBLE in online A/B Test.
+* YouTube studied this and calls it “THE SURROGATE PROBLEM”.
+  * Their original paper is found here: [Surrogate for Long-Term User Experience in Recommender Systems](https://research.google/pubs/surrogate-for-long-term-user-experience-in-recommender-systems/)
+* There is more art than science in the development of Recommendation = Systems
+* At the end of the day, online A/B tests are the only thing you can use for your Recommendation System.
+
+
+![image](https://github.com/user-attachments/assets/f7b4d0be-1d45-45d6-a970-7cef884cb221)
+
