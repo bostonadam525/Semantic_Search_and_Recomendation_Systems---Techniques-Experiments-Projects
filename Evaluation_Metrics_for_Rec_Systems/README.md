@@ -188,4 +188,136 @@
    
 ![image](https://github.com/user-attachments/assets/9f4c00c2-bd5c-4fe6-8c63-db57e12c7bc4)
 
- 
+
+
+ # Testing Methodology for Recommendation Systems Offline
+* Disclaimer: This is the same standard train-test split method we use in most machine learning models!!
+
+## Method 1: Classical Machine Learning Train/Test Split
+* This is the flow of this method:
+1. Start with a Full Data set (e.g. movie ratings)
+2. Split data into train and test sets (e.g. 70/30)
+3. Train set fed into —> Machine learning model —> predictions generated
+4. Test set used to measure accuracy, precision, recall, etc.
+
+
+## Method 2: K-Folds Cross Validation
+1. Start with a Full Data set (e.g. movie ratings)
+2. Split data into **RANDOM k-folds** (e.g. 3 folds)
+3. Each individual fold is run through the ML model
+4. For each individual fold we measure accuracy, precision, recall
+5. Measure accuracy on the Test Data Set
+6. Take average of all results
+
+
+
+
+# How do we come up with an Accuracy metric for Rec Systems?
+* These are some well known machine learning metrics often used in supervised learning algorithms such as Linear Regression. 
+
+1. **MAE (mean absolute error)**
+ * Most simple or straightforward calculation. 
+ * This is the “mean” or “average” error in each prediction rating vs. actual in the system 
+ * Goal is the lowest MAE score
+
+
+2. **RMSE (Root Mean Squared Error)**
+ * Penalizes when prediction is way off and penalizes less when prediction are closer.
+ * Sum of squares of each error instead of mean. 
+ * This will weight larger errors higher than lower errors. 
+ * We take square root when done. 
+ * Goal is LOW RMSE scores
+
+
+
+# Problem —> Accuracy doesnt really tell us ANYTHING in Rec Systems?!
+* Where the heck did Accuracy come from anyways?
+* This dates back to 2006 and the popular Netflix challenge to come up with a method to evaluate their rec system for their own RMSE score.
+* The Prize of the competition was focused on choosing low RMSE scores so it has “stuck” in the industry since then. Bellkor won the prize!
+* **However, here's the kicker: this is not ideal and Netflix didnt’ end up using RMSE after all!**
+
+
+
+# Top-N Recommender Metrics
+1. **Hit Rate**
+   * We generate top-n recs for all users in test set. If one of top-n is correct its a “hit”.
+   * calculation —> `hit rate = hits / users`
+   * Measuring hit rate is difficult because we cant use the same test or cross validation techniques. We aren’t measuring hit rate on the predictions, we are measuring top-n hits which is separate!
+   * You could use the training data to measure hit rate but this is not ideal nor is it accurate. 
+
+2. **Leave-one-out-cross-validation**
+   * Compute top-n recs for each user in training data and then remove 1 item from each of users train data. 
+   * We then test the models ability to predict the top-n item that was left out. 
+   * Hit rate with leave-one-out is more user focused, although not ideal because you need. ALOT OF DATA. 
+
+3. **Average Reciprocal Hit Rate (ARHR)**
+   * Variation on hit rate
+   * Accounts for WHERE in the top-n lists the hits appear.
+   * More user focused metric —> tend to get the top hits from the top-n only which biases the results. 
+   * Difference in equation: `ARHR = reciprocal rank of hits / users`
+   * Here is an example: 
+```
+Rank         Reciprocal Rank
+3                      1/3
+2                      1/2
+1                       1
+```
+* Overall ARHR works well if a user has to scroll to see lower ranked items.
+* Thus we are penalizing lower ranked items makes sense since the probability of a user finding the lower ranked items is generally lower than the higher ranked items.
+
+
+4. **Cumulative Hit Rate (cHR)**
+   * Throw away hits if predictive rating is below a set threshold. 
+   * Concept —> credit not given if we recommend items to a user that we predict they won’t want to see.
+   * Here is an example:
+```
+Hit rank           predicted (or actual) rating
+4				5.0
+2				3.0
+1				5.0
+10				2.0
+```
+   * So above, we would throw away the 2nd and 4th hits as their predicted rating is lower than the threshold of 5.0.
+
+
+5. **rating hit rate (rHR)**
+   * This is the hit rate by predicted rating score
+   * Gives a distribution of the ratings
+  
+
+
+# Other Metrics 
+1. **Coverage**
+   * This is the `% of <user, item>` pairs that can be predicted (possible pairs)
+   * Coverage can be at odds with Accuracy —> balance between the two is key!
+   * Coverage gives you an idea of when new products/items are “covered”with ratings and patterns. 
+
+2. **Diversity**
+   * Measure of how broad a variety of items the system shows to users. 
+   * Calculation —> `(1-S)`
+   * S = avg similarity between recommendation pairs
+   * Similarity scores of most rec systems can be averaged and used to compare the items. S is this metric!
+   * You can achieve high diveristy by adding HIGH RANDOMNESS.
+   * However, keep in mind HIGH DIVERSITY IS NOT ALWAYS A GOOD THING because high diversity may not be relevant to the user.
+   * Thus these are really false positives —> hence why other metrics that look at quality of reccomendations are imporrtant. 
+
+
+
+
+3. **Novelty**
+   * This is the “mean popularity rank of recommended items”
+   * If you recommend Random things —> it may not mean good results as the user may see things that are NOT RELEVANT to them.
+   * Thus, Novelty is not a good thing for most users if they are not familiar with what is being recommended. 
+   * **There needs to be a balance between familiarity and new items.**
+
+
+## “The Long Tail Problem”
+* The goal of a rec system should be to surface items to the user in the LONG TAIL. 
+* In the plot below we see the # of Sales or popular items sold is on the Y axis, Products are on the X axis.
+* It is very common in rec systems to see an Exponential distribution like this. 
+   * This is because very often a Large percent of sales are from the most popular items.
+   * Thus the purpose of a GOOD Rec system should be to help users discover the long tail items!
+* This is why novelty scores are important —> you need a balance between NOVELTY and TRUST in the user to discover the long tail.
+
+![image](https://github.com/user-attachments/assets/478b57de-afc2-4bc7-ba1f-6a26f0a02fe0)
+* [image source](https://medium.com/@kyasar.mail/recommender-systems-what-long-tail-tells-91680f10a5b2)
