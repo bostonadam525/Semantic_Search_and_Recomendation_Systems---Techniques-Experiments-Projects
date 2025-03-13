@@ -35,7 +35,38 @@
 ![image](https://github.com/user-attachments/assets/44b0fa18-a188-4aac-a796-56bf89b4fec6)
 
 
+# Graph Neural Networks Functionality
+* A computational graph is formed by aggregation using neural networks. And this is forward propagation [source](https://neptune.ai/blog/graph-neural-network-and-some-of-gnn-applications)
 
+![image](https://github.com/user-attachments/assets/0d615327-9f72-484c-83a1-3e7acd1f8f38)
+
+
+
+# LightGCN
+* LightGCN is an embedding-based model, which means that it attempts to find optimal embeddings (vectors) for the users and items.
+* At the same time, it is also searching for the optimal scoring function `f`, whose purpose is:
+  1. assigning high scores to **new user-item pairs** --> which are good recommendations
+  2. assigning low scores otherwise
+
+* As a result, the **embeddings of users with similar preferences are expected to be similar in the most optimal case**.
+* And thus the embeddings of users with more dissimilar preferences are expected to be more different [source](https://medium.com/@jn2279/better-recommender-systems-with-lightgcn-a0e764af14f9)
+
+![image](https://github.com/user-attachments/assets/77484e01-40a3-4e45-8533-6712636f5ce7)
+
+## Matrix Factorization -- The base layer
+* [source](https://medium.com/@jn2279/better-recommender-systems-with-lightgcn-a0e764af14f9)
+* Matrix factorization captures **only the first-order edge connectivity structure of the graph (only the information from immediate neighbours of a given node)**
+* However, we would want a model to be able to capture a **higher-order graph structure**.
+* This is where LightGCN comes in, which starts training with node embeddings which are initialized with matrix factorization:
+
+![image](https://github.com/user-attachments/assets/46a73096-31d1-4b2f-bbc9-2c4054e6bf76)
+
+
+* Once the embeddings are initialized we reach the most crutial part of the entire model: How do we get the embeddings to interact with each other in such a way that encourages the embeddings of similar users/items to be similar?
+* LightGCN is able to do this with 3 layers, where for each layer, each node obtains its new embedding by combining the embeddings of it’s neighbours.
+* This is very similar to the CNN or convolutional neural network mentioned above and is essentially a graph convolution (see comparison with image convolution below)
+
+![image](https://github.com/user-attachments/assets/d92419b7-98e3-4142-8d9c-9e50648acbde)
 
 
 
