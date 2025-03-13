@@ -24,6 +24,21 @@
 
 
 
+# Convolutional Neural Networks (CNN) vs. Graph Neural Networks (GNN)
+* CNNs uses kernel matrix filtering methods to slide over each pixel in a fixed manner as a "sliding window". The insight allowing us to reach our goal is that each convolution takes a little sub-patch of the image (a little rectangular part of the image), applies a function to it, and produces a new part (a new pixel). [source](https://neptune.ai/blog/graph-neural-network-and-some-of-gnn-applications)
+
+![image](https://github.com/user-attachments/assets/3e51dc96-c7a4-4db7-bd44-b96c06cb2606)
+
+* We can’t use a “moving” filter with a GNN though. The kernel filter in a CNN is instead abstracted as a central node with X neighbors.
+* However, the concept of aggregation is similar. Each node in a GNN has X nearest neighbors which are encoded as aggregate embeddings similar to how in a CNN you would take the max, min, sum or average of each kernel to get your final matrix. 
+
+![image](https://github.com/user-attachments/assets/44b0fa18-a188-4aac-a796-56bf89b4fec6)
+
+
+
+
+
+
 # References
 * Building Rec Systems with GNN in PyTorch
 * [Graph Neural Network (GNN) Architectures for Recommendation Systems](https://towardsdatascience.com/graph-neural-network-gnn-architectures-for-recommendation-systems-7b9dd0de0856/)
