@@ -17,7 +17,7 @@ Ranking
 Re-ranking
 Evaluation
 
-## 2. BM25 + Vector Search
+## 2. BM25 + Vector Search == HYBRID SEARCH
 Why use both?
 How do they complement each other?
 Tradeoffs
@@ -34,6 +34,125 @@ MRR
 Precision@K
 Relevance measurement
 A/B testing
+
+---
+# 1. How does a retrieval pipeline works end-to-end?
+Indexing
+Retrieval
+Ranking
+Re-ranking
+Evaluation
+
+
+
+
+
+
+---
+# 2. BM25 + Vector Search == HYBRID SEARCH
+- Why use both?
+- How do they complement each other?
+- Tradeoffs
+
+## BM25
+- BM25 works by scoring documents using term frequency, inverse document frequency, and document length normalization. BM25 is still the default ranking algorithm in Elasticsearch and OpenSearch.
+- How it works:
+  - **Term Frequency**: how often a term appears in a document (e.g. "bank" appearing 100 times) -- however just because a term appears most frequently does not mean it is most important.
+  - **Inverse Document Frequency (IDF)**: How rare is the term across all documents? Stop words which are very common (is, the, a) carry small weight vs. rare words will carry more weight
+  - **Document Length Normalization**: BM25 penalizes longer documents to prevent them from dominating the search results
+
+- BM25 is really good at:
+  - Exact keyword matching (SKUs, error codes, CLI flags)
+  - High-precision queries (exact keywords "hits")
+  - Transparent debuggable ranking -- more easy to debug
+  - Latency: this is very fast and efficient (e.g. ElasticSearch can handle billions of documents efficiently)
+
+- BM25 will break and fail at:
+  - Vocabulary mismatch ("cancel membership" vs "terminate subscription") --> out of vocabulary problem (OOV)
+  - Semantic intent
+  - Multi lingual queries
+  - Similarity of concepts
+
+- BM25 is really just a classical NLP bag-of-words model -- It has no understanding of meaning.
+
+## Vector Embeddings
+- Vector search transforms text into dense numerical vectors where semantically similar content is closer in the same vector space.
+- Retrieval is thus easier because it uses nearest-neighbor search within the vector space.
+
+- Semantic Vector search is really good at:
+  - semantic equivalence
+  - natural language questions
+  - fuzzy concept matching
+  - cross-lingual retrieval
+  - RAG pipelines where LLMs generate natural language queries
+
+- Semantic Vector search will break and fail at:
+  - exact term matching (NullPointerException, order IDs)
+  - infrastructure cost (GPU for embedding, RAM for HNSW indexes),
+  - staleness when documents change frequently
+  - scaling --> this is why quantization and methods such as Matryhoska embeddings are used today. 
+
+- Quality of vector search is entirely dependent upon the embedding model you use — domain fit, dimensionality, and max token length all matter.
+
+## Tradeoffs and Balance
+
+
+## Hybrid search usage
+- often times running both pipelines in parallel and combining their scores is the most efficient and precise way to do this.
+- **Reciprocal Rank Fusion (RRF)** is the most common way to do this
+  - RRF works by merging ranked lists from multiple retrievers without needing normalization.
+  - RRF is RANK-BASED not score-based (e.g. you don't need cosine similarity vs. BM25 scores before you merge them)
+
+```
+Query
+  │
+  ├──► BM25 Retriever (Elasticsearch / OpenSearch)
+  │         └── Top-K candidates
+  │
+  └──► Vector Retriever (Pinecone / Weaviate / pgvector / Qdrant / ChromaDB / FAISS)
+            └── Top-K candidates
+                    │
+                    ▼
+            RRF Merge (or weighted score fusion)
+                    │
+                    ▼
+            Re-ranker (optional — cross-encoder for precision)
+                    │
+                    ▼
+            Final Top-N Results → LLM Context / Response
+
+## Re-Rankers
+- After the initial retrieval (RECALL), a cross-encoder/re-ranker is often used to improve PRECISION.
+- However, unlike bi-encoders (encode query and document separately), **cross-encoders process the query-document pair in the same space**, producing a much more accurate relevance score — at higher compute cost (cross-encoders are usually slower):
+- This is the typical Re-Ranker pattern:
+  - Retrieval (high recall, lower precision): BM25 + vector search, top 50–100 candidates
+  - Re-ranking (high precision, higher cost): cross-encoder on the top candidates, select top 5–10
+  - Output/Generation: pass final candidates as context to the LLM or user
+
+### Why do we even need Re-Rankers?
+- Most semantic search systems use a single bi-encoder which is a dense embedding model. The problem? We are condensing information into the embedding space the bi-encoder provides -- into a SINGLE VECTOR.
+- This high --> low dimensionality often causes information loss.
+- In addition, we don't know the context of the users query until it happens -- so we are creating two separate embeddings (1 of the query, 1 of the document to search) then comparing them. This results in "proximity" to vectors and often loses precision. 
+- This is where re-rankers come in. Less information is lost. We embed BOTH the user query AND the document into the same vector space similarity score.
+
+
+#### Bi-encoders
+- Below we can see the typical bi-encoder workflow separates the vectors between the query and the document resulting in "proximity" [source](https://www.pinecone.io/learn/series/rag/rerankers/)
+
+<img width="2760" height="1420" alt="image" src="https://github.com/user-attachments/assets/56499a55-bfde-4ed3-89e6-230f436c38da" />
+
+
+#### Cross-Encoders
+- With the cross encoder both are compared in the same space [source](https://www.pinecone.io/learn/series/rag/rerankers/)
+
+<img width="2440" height="1100" alt="image" src="https://github.com/user-attachments/assets/63aeae74-7a45-442d-9b16-176fbf6d93ba" />
+
+
+
+
+
+```
+
 
 ---
 # 3. Image Search
@@ -140,3 +259,7 @@ A/B testing
 ---
 # Resources
 - [PineCone article](https://www.pinecone.io/learn/offline-evaluation/)
+- [BM25 vs. Vector Search: Choosing the Right Retrieval Strategy for Production Systems](https://dev.to/aloknecessary/bm25-vs-vector-search-choosing-the-right-retrieval-strategy-for-production-systems-599n)
+- [BM25 vs. Vector Search: Choosing the Right Retrieval Strategy for Production Systems](https://aloknecessary.in/blogs/bm25_vs_vector_search/?utm_source=devto&utm_medium=referral&utm_campaign=blog_syndication&utm_content=bm25-vs-vector-search)
+- [Pinecone - Rerankers](https://www.pinecone.io/learn/series/rag/rerankers/)
+- [ElasticSearch - What is semantic reranking and how to use it](https://www.elastic.co/search-labs/blog/elastic-semantic-reranker-part-1)
